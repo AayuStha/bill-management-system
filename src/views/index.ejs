@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-center">Bill Management System</h1>
+
+        <!-- Flash Messages -->
+        <% if (messages.error) { %>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <%= messages.error %>
+            </div>
+        <% } %>
+        <% if (messages.success) { %>
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                <%= messages.success %>
+            </div>
+        <% } %>
+
+        <!-- Bill Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Create New Bill</h2>
+            <form action="/" method="POST">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
+                        <input type="text" name="itemName" required
+                               class="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                        <input type="number" name="quantity" min="1" required
+                               class="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                               oninput="calculateTotal()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Price (NPR)</label>
+                        <input type="number" name="price" min="0" step="0.01" required
+                               class="p-3 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                               oninput="calculateTotal()">
+                    </div>
+                </div>
+                <div class="mt-4 text-right">
+                    <div class="text-lg font-semibold mb-4">
+                        Total: NPR <span id="totalAmount">0.00</span>
+                    </div>
+                    <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700">
+                        Create Bill
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bills List -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Bills List</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price (NPR)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispatch Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <% bills.forEach(bill => { %>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap"><%= bill.itemName %></td>
+                                <td class="px-6 py-4 whitespace-nowrap"><%= bill.quantity %></td>
+                                <td class="px-6 py-4 whitespace-nowrap">NPR <%= bill.price.toFixed(2) %></td>
+                                <td class="px-6 py-4 whitespace-nowrap">NPR <%= bill.total.toFixed(2) %></td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                               <%= bill.status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+                                        <%= bill.status %>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap"><%= bill.formattedDispatchDate %></td>
+                                <td class="px-6 py-4 whitespace-nowrap"><%= bill.formattedPaymentDate %></td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex space-x-3">
+                                        <% if (bill.status === 'Not Paid') { %>
+                                            <form action="/update-status/<%= bill._id %>" method="POST" class="inline">
+                                                <button type="submit" class="text-green-600 hover:text-green-800">
+                                                    <i class="fas fa-check-circle text-xl"></i>
+                                                </button>
+                                            </form>
+                                        <% } %>
+                                        <form action="/delete/<%= bill._id %>" method="POST" class="inline">
+                                            <button type="submit" class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash-alt text-xl"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateTotal() {
+            const quantity = document.querySelector('input[name="quantity"]').value || 0;
+            const price = document.querySelector('input[name="price"]').value || 0;
+            const total = (quantity * price).toFixed(2);
+            document.getElementById('totalAmount').textContent = total;
+        }
+    </script>
+</body>
+</html>
