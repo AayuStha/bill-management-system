@@ -9,8 +9,8 @@ const billRoutes = require('./routes/billRoutes');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB Atlas
+connectDB(); // This will now connect using MongoDB Atlas
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -25,7 +25,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: 'mongodb://localhost:27017/billManagement',
+    mongoUrl: process.env.MONGODB_URI,
     ttl: 14 * 24 * 60 * 60 // 14 days
   })
 }));
