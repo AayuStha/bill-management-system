@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 const billSchema = new mongoose.Schema({
   itemName: {
@@ -39,11 +39,11 @@ const billSchema = new mongoose.Schema({
 
 // Virtual for formatted dates
 billSchema.virtual('formattedDispatchDate').get(function() {
-  return moment(this.dispatchDate).format('MMMM Do YYYY, h:mm:ss a');
+  return moment(this.dispatchDate).tz('Asia/Kathmandu').format('MMMM Do YYYY, h:mm:ss a');
 });
 
 billSchema.virtual('formattedPaymentDate').get(function() {
-  return this.paymentDate ? moment(this.paymentDate).format('MMMM Do YYYY, h:mm:ss a') : '';
+  return this.paymentDate ? moment(this.paymentDate).tz('Asia/Kathmandu').format('MMMM Do YYYY, h:mm:ss a') : '';
 });
 
 module.exports = mongoose.model('Bill', billSchema);
